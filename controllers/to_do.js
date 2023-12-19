@@ -55,7 +55,27 @@ const get_single_to_do = async (req, res) => {
 }
 
 const update_to_do = async (req, res) => {
-  res.json({ message: 'Update to do' })
+  const { id: todo_id } = req.params
+  const { _id: user_id } = req.user
+  const updates = Object.keys(req.body)
+  const allowed_updates = ['title', 'description', 'completed']
+  const is_valid_operation = updates.every((update) =>
+    allowed_updates.includes(update)
+  )
+  if (!is_valid_operation)
+    return res.status(400).json({ error: 'Invalid updates' })
+
+  try {
+    const to_do = await ToDo.findOne({ _id: todo_id, owner: user_id })
+    if (!to_do) {
+      return res.status(404).json({ message: 'To do not found' })
+    }
+    updates.forEach((update) => (to_do[update] = req.body[update]))
+    await to_do.save()
+    res.json(to_do)
+  } catch (error) {
+    res.status(500).json({ error })
+  }
 }
 
 const delete_to_do = async (req, res) => {
