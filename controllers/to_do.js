@@ -59,7 +59,17 @@ const update_to_do = async (req, res) => {
 }
 
 const delete_to_do = async (req, res) => {
-  res.json({ message: 'Delete to do' })
+  const { id: todo_id } = req.params
+  const { _id: user_id } = req.user
+  try {
+    const to_do = await ToDo.findOneAndDelete({ _id: todo_id, owner: user_id })
+    if (!to_do) {
+      return res.status(404).json({ message: 'To do not found' })
+    }
+    res.json(to_do)
+  } catch (error) {
+    res.status(500).json({ error })
+  }
 }
 
 module.exports = {
