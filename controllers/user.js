@@ -1,55 +1,39 @@
 const User = require('../models/user')
+const async_wrapper = require('../middleware/async_wrapper')
 
-const register_user = async (req, res) => {
-  try {
-    const user = new User(req.body)
-    await user.save()
-    const token = await user.generate_auth_token()
-    res.status(201).json({ user, token })
-  } catch (error) {
-    res.status(400).json({ error })
-  }
-}
+const register_user = async_wrapper(async (req, res) => {
+  const user = new User(req.body)
+  await user.save()
+  const token = await user.generate_auth_token()
+  res.status(201).json({ user, token })
+})
 
-const login_user = async (req, res) => {
+const login_user = async_wrapper(async (req, res) => {
   const { email, password } = req.body
-  try {
-    const user = await User.find_by_credentials(email, password)
-    const token = await user.generate_auth_token()
-    res.json({ user, token })
-  } catch (error) {
-    res.status(400).json({ error })
-  }
-}
+  const user = await User.find_by_credentials(email, password)
+  const token = await user.generate_auth_token()
+  res.json({ user, token })
+})
 
-const logout_user = async (req, res) => {
+const logout_user = async_wrapper(async (req, res) => {
   const { user, token } = req
-  try {
-    user.tokens = user.tokens.filter((t) => t.token !== token)
-    await user.save()
-    res.json({ message: 'Logout user' })
-  } catch (error) {
-    res.status(500).json({ error })
-  }
-}
+  user.tokens = user.tokens.filter((t) => t.token !== token)
+  await user.save()
+  res.json({ message: 'Logout user' })
+})
 
-const logout_all_user = async (req, res) => {
+const logout_all_user = async_wrapper(async (req, res) => {
   const { user } = req
-  try {
-    user.tokens = []
-    await user.save()
-    res.json({ message: 'Logout all user' })
-  } catch (error) {
-    console.log('MERT DEBUG  20231219 (user.js/43) ', { Error: error })
-    res.status(500).json({ error })
-  }
-}
+  user.tokens = []
+  await user.save()
+  res.json({ message: 'Logout all user' })
+})
 
 const get_user = async (req, res) => {
   res.send(req.user)
 }
 
-const update_user = async (req, res) => {
+const update_user = async_wrapper(async (req, res) => {
   const updates = Object.keys(req.body)
   const allowed_updates = ['name', 'email', 'password']
   const is_valid_operation = updates.every((update) =>
@@ -59,25 +43,16 @@ const update_user = async (req, res) => {
     return res.status(400).json({ error: 'Invalid updates!' })
   }
   const { user } = req
-  try {
-    updates.forEach((update) => (user[update] = req.body[update]))
-    await user.save()
-    res.json(user)
-  } catch (error) {
-    res.status(400).json({ error })
-  }
-}
+  updates.forEach((update) => (user[update] = req.body[update]))
+  await user.save()
+  res.json(user)
+})
 
-const delete_user = async (req, res) => {
+const delete_user = async_wrapper(async (req, res) => {
   const { user } = req
-  try {
-    await user.deleteOne()
-    res.json(user)
-  } catch (error) {
-    console.log('MERT DEBUG  20231219 (user.js/77) ', { Error: error })
-    res.status(500).json({ error })
-  }
-}
+  await user.deleteOne()
+  res.json(user)
+})
 
 module.exports = {
   register_user,
