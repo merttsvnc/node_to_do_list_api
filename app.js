@@ -4,10 +4,12 @@ const app = express()
 const user_router = require('./routes/user')
 const to_do_router = require('./routes/to_do')
 const connect_db = require('./config/db')
+const not_found_route = require('./middleware/not_found')
 
 app.use(express.json())
 app.use('/api/v1/user', user_router)
 app.use('/api/v1/todos', to_do_router)
+app.use(not_found_route)
 
 const port = process.env.PORT || 3000
 const start = async () => {
